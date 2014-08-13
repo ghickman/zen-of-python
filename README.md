@@ -1,0 +1,1 @@
+# zen-of-python.info
