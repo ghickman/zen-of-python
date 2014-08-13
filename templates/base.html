@@ -1,0 +1,19 @@
+<html>
+<head>
+  <link type="text/css" rel="stylesheet" href="main.css" />
+
+  <title>{% block title %}{{ line }}The Zen of Python{% endblock %}</title>
+</head>
+<body>
+
+<div id="main">
+  {% block content %}
+  {% endblock %}
+</div>
+
+<footer>
+  <p>The Zen of Python was originally written by Tim Peters and lives in <a href="http://legacy.python.org/dev/peps/pep-0020/">PEP20</a></p>
+  <p>A <a href="http://ghickman.co.uk">George Hickman</a> Project</p>
+</footer>
+</body>
+</html>

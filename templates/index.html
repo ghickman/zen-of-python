@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1><a href="http://legacy.python.org/dev/peps/pep-0020/">The Zen of Python</a></h1>
+<ul>
+  {% for filename, line in lines.items() %}
+  <li>
+    <a href="{{ filename }}.html">{{ line }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
