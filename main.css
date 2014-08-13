@@ -1,0 +1,52 @@
+body {
+  color: #333;
+  font-family: "Helvetica Neue" Arial sans-serif;
+  text-align: center;
+}
+
+h1 {
+  font-size: 100px;
+}
+
+h2 {
+    font-size: 100px;
+    margin-top: 130px;
+}
+
+a {
+    color: #333;
+    text-decoration: none;
+}
+
+#main {
+    margin-bottom: 50px;
+}
+ul {
+    list-style: none;
+    margin: 30px auto 0;
+    padding: 0;
+    width: 625px;
+}
+li {
+    margin: 15px 0;
+    text-align: left;
+}
+li a {
+    font-size: 20px;
+}
+li a:hover {
+    color: #888;
+    border-bottom: 1px dashed #888;
+}
+
+footer p {
+    color: #888;
+    font-size: 11px;
+}
+footer a {
+    border-bottom: 1px dashed #888;
+    color: #888;
+}
+footer a:hover {
+    color: #444;
+}
