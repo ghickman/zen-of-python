@@ -32,14 +32,13 @@ for line in lines:
     lines_dict[filename] = line
 
 env = Environment(loader=FileSystemLoader('templates'))
+template = env.get_template('base.html')
 
 # make line files
-line_template = env.get_template('line.html')
 for filename, line in lines_dict.items():
     with open('output/{}.html'.format(filename), 'w') as f:
-        f.write(line_template.render(line=line))
+        f.write(template.render(lines=lines_dict, current_line=line))
 
 # gimme some index
-index_template = env.get_template('index.html')
 with open('output/index.html', 'w') as f:
-    f.write(index_template.render(lines=lines_dict))
+    f.write(template.render(lines=lines_dict, current_line=None))

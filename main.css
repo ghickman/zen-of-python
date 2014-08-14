@@ -28,9 +28,18 @@ ul {
     width: 625px;
 }
 li {
+    font-size: 20px;
     margin: 15px 0;
     text-align: left;
+    white-space: nowrap;
 }
+li.selected {
+    font-weight: bold;
+    font-size: 27px;
+    margin: 25px 0 25px -13px;
+}
+li.selected:before {content: "“";}
+li.selected:after {content: "”";}
 li a {
     font-size: 20px;
 }
