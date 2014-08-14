@@ -1,7 +1,7 @@
 import collections
 import re
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Template
 
 
 lines = [
@@ -31,8 +31,8 @@ for line in lines:
     filename = regex.sub('', line.lower()).replace(' ', '-')
     lines_dict[filename] = line
 
-env = Environment(loader=FileSystemLoader('templates'))
-template = env.get_template('base.html')
+with open('template.html', 'r') as f:
+    template = Template(f.read())
 
 # make line files
 for filename, line in lines_dict.items():
