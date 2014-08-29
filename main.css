@@ -21,8 +21,7 @@ a {
 #main {
     margin-bottom: 50px;
 }
-ul {
-    list-style: none;
+ol {
     margin: 30px auto 0;
     padding: 0;
     width: 625px;
@@ -35,11 +34,9 @@ li {
 }
 li.selected {
     font-weight: bold;
-    font-size: 27px;
-    margin: 25px 0 25px -13px;
+    font-size: 28px;
+    margin: 25px 0 25px -1px;
 }
-li.selected:before {content: "“";}
-li.selected:after {content: "”";}
 li a {
     font-size: 20px;
 }

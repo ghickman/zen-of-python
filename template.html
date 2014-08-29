@@ -20,7 +20,7 @@
 
 <div id="main">
   <h1><a href="http://legacy.python.org/dev/peps/pep-0020/">The Zen of Python</a></h1>
-  <ul>
+  <ol>
     {% for filename, line in lines.items() %}
       {% if line == current_line %}
       <li class="selected">{{ line }}</li>
@@ -30,7 +30,7 @@
       </li>
       {% endif %}
     {% endfor %}
-  </ul>
+  </ol>
 </div>
 
 <footer>
