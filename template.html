@@ -23,11 +23,11 @@
   <ol>
     {% for filename, line in lines.items() %}
       {% if line == current_line %}
-      <li class="selected"><a name="{{ filename }}" />{{ line }}</li>
+      <li class="selected"><a name="{{ loop.index }}" />{{ line }}</li>
       {% else %}
       <li>
-        <a name="{{ filename }}" />
-        <a href="{{ filename }}.html#{{ filename }}">{{ line }}</a>
+        <a name="{{ loop.index }}" />
+        <a href="{{ filename }}.html#{{ loop.index }}">{{ line }}</a>
       </li>
       {% endif %}
     {% endfor %}
