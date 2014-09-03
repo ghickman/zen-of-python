@@ -26,8 +26,7 @@
       <li class="selected"><a name="{{ filename }}" />{{ line }}</li>
       {% else %}
       <li>
-        <a name="{{ filename }}" />
-        <a href="{{ filename }}.html#{{ filename }}">{{ line }}</a>
+        <a name="{{ filename }}" href="{{ filename }}.html#{{ filename }}">{{ line }}</a>
       </li>
       {% endif %}
     {% endfor %}
