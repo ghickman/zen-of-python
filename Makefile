@@ -11,6 +11,6 @@ generate: clean
 	python generate.py && cp main.css output/main.css
 
 upload:
-	s3cmd sync output/ s3://zen-of-python --acl-public --delete-removed --guess-mime-type --cf-invalidate
+	aws s3 sync --acl=public-read --delete output/ s3://zen-of-python.info/
 
 publish: clean generate upload
