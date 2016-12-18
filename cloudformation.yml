@@ -1,0 +1,225 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: |
+  Static web site stack including:
+  * S3 bucket for web site content
+  * Redirect from "www." to base domain
+  * Access logs written to logs bucket
+  * ACM Certificate for SSL
+  * CloudFront distributions for website https access
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: "The base domain name for the web site"
+    Default: "zen-of-python.info"
+
+  DefaultTTL:
+    Type: Number
+    Description: "TTL in seconds"
+    Default: 30
+
+  MinimumTTL:
+    Description: "Minimum cache lifetime in seconds for the CloudFront distribution"
+    Default: 5
+    Type: Number
+
+Resources:
+  # Bucket for CloudFront and S3 access logs: logs.example.com
+  LogsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "logs.${DomainName}"
+      AccessControl: LogDeliveryWrite
+    DeletionPolicy: Retain
+
+  # Bucket for site content: example.com
+  SiteBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref DomainName
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      # logs.example.com/logs/s3/example.com/
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LogsBucket
+        LogFilePrefix: !Sub "logs/s3/${DomainName}/"
+    DeletionPolicy: Retain
+
+  # Bucket to redirect to example.com: www.example.com
+  RedirectBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "www.${DomainName}"
+      AccessControl: BucketOwnerFullControl
+      # logs.example.com/logs/s3/www.example.com/
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LogsBucket
+        LogFilePrefix: !Sub "logs/s3/www.${DomainName}/"
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Ref DomainName
+          Protocol: https
+    DeletionPolicy: Delete
+
+  # Certificate for HTTPS accesss through CloudFront
+  Certificate:
+    Type: "AWS::CertificateManager::Certificate"
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub "www.${DomainName}"
+
+  # CDN serves S3 content over HTTPS for example.com
+  CloudFrontDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          AllowedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          DefaultTTL: !Ref DefaultTTL
+          MinTTL: !Ref MinimumTTL
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+             Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: "http2"
+        # IsIPV6Enabled: true
+        # logs.example.com/logs/cloudfront/example.com/
+        Logging:
+          Bucket: !Sub "${LogsBucket}.s3.amazonaws.com"
+          Prefix: !Sub "logs/cloudfront/${DomainName}/"
+          IncludeCookies: false
+        Origins:
+          -
+            DomainName: !Join ["", [!Ref DomainName, ".", !FindInMap [RegionMap, !Ref "AWS::Region", suffix]]]
+            Id: S3Origin
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+
+  # CDN serves S3 content over HTTPS for www.example.com
+  RedirectCloudFrontDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref RedirectBucket
+        DefaultCacheBehavior:
+          TargetOriginId: RedirectS3Origin
+          AllowedMethods:
+            - GET
+            - HEAD
+          DefaultTTL: !Ref DefaultTTL
+          MinTTL: !Ref MinimumTTL
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+             Forward: none
+          ViewerProtocolPolicy: allow-all
+        Enabled: true
+        HttpVersion: "http2"
+        # IsIPV6Enabled: true
+        # logs.example.com/logs/cloudfront/www.example.com/
+        Logging:
+          Bucket: !Sub "${LogsBucket}.s3.amazonaws.com"
+          Prefix: !Sub "logs/cloudfront/www.${DomainName}/"
+          IncludeCookies: false
+        Origins:
+          -
+            DomainName: !Join ["", [!Ref RedirectBucket, ".", !FindInMap [RegionMap, !Ref "AWS::Region", suffix]]]
+            Id: RedirectS3Origin
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+
+Mappings:
+  RegionMap:
+    ap-northeast-1:
+      S3hostedzoneID: "Z2M4EHUR26P7ZW"
+      suffix: "s3-website-ap-northeast-1.amazonaws.com"
+    ap-northeast-2:
+      S3hostedzoneID: "Z3W03O7B5YMIYP"
+      suffix: "s3-website.ap-northeast-2.amazonaws.com"
+    ap-south-1:
+      S3hostedzoneID: "Z11RGJOFQNVJUP"
+      suffix: "s3-website.ap-south-1.amazonaws.com"
+    ap-southeast-1:
+      S3hostedzoneID: "Z3O0J2DXBE1FTB"
+      suffix: "s3-website-ap-southeast-1.amazonaws.com"
+    ap-southeast-2:
+      S3hostedzoneID: "Z1WCIGYICN2BYD"
+      suffix: "s3-website-ap-southeast-2.amazonaws.com"
+    eu-central-1:
+      S3hostedzoneID: "Z21DNDUVLTQW6Q"
+      suffix: "s3-website.eu-central-1.amazonaws.com"
+    eu-west-1:
+      S3hostedzoneID: "Z1BKCTXD74EZPE"
+      suffix: "s3-website-eu-west-1.amazonaws.com"
+    sa-east-1:
+      S3hostedzoneID: "Z7KQH4QJS55SO"
+      suffix: "s3-website-sa-east-1.amazonaws.com"
+    us-east-1:
+      S3hostedzoneID: "Z3AQBSTGFYJSTF"
+      suffix: "s3-website-us-east-1.amazonaws.com"
+    us-east-2:
+      S3hostedzoneID: "Z2O1EMRO9K5GLX"
+      suffix: "s3-website.us-east-2.amazonaws.com"
+    us-west-1:
+      S3hostedzoneID: "Z2F56UZL2M1ACD"
+      suffix: "s3-website-us-west-1.amazonaws.com"
+    us-west-2:
+      S3hostedzoneID: "Z3BJ6K6RIION7M"
+      suffix: "s3-website-us-west-2.amazonaws.com"
+
+Outputs:
+  DomainName:
+    Description: Domain name
+    Value: !Ref DomainName
+  RedirectDomainName:
+    Description: Redirect hostname
+    Value: !Ref RedirectBucket
+  SiteBucket:
+    Value: !Ref SiteBucket
+  RedirectBucket:
+    Value: !Ref RedirectBucket
+  LogsBucket:
+    Description: S3 Bucket with access logs
+    Value: !Ref LogsBucket
+  CloudFrontDomain:
+    Description: CloudFront distribution domain name
+    Value: !Ref CloudFrontDistribution
+  RedirectCloudFrontDomain:
+    Description: Redirect CloudFront distribution domain name
+    Value: !Ref RedirectCloudFrontDistribution
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Website
+        Parameters:
+          - DomainName
+      - Label:
+          default: CloudFront CDN
+        Parameters:
+          - MinimumTTL
+          - DefaultTTL
